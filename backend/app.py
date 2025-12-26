@@ -5,21 +5,25 @@ import google.generativeai as genai
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 import json
+import random
+# At the top of app.py
+from dotenv import load_dotenv
+load_dotenv()
 
+# Replace the hardcoded key line with this:
+GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
 app = Flask(__name__)
 CORS(app)
 
-# 🔑 PASTE YOUR KEY HERE
-GOOGLE_API_KEY = "AIzaSyDJZ--Ndof7rELsqmBtfx4K9CO5gY1ZQ5Q"
+# 🛑 PASTE YOUR KEY HERE
+GOOGLE_API_KEY = "AIzaSyA_tnwSeusLE66HDG2kgUq_H4o3eCaBDeU"
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# --- THE 10 ARCHETYPES ---
 ARCHETYPES = {
     0: "swiss", 1: "cyber", 2: "brutal", 3: "ethereal", 4: "midnight",
     5: "paper", 6: "bauhaus", 7: "y2k", 8: "botanical", 9: "obsidian"
 }
 
-# Training Data
 X_train = np.array([
     [100, 0, 0], [100, 100, 0], [0, 100, 0], [10, 10, 100], [50, 50, 30],
     [30, 20, 90], [80, 60, 80], [40, 90, 50], [20, 10, 70], [90, 10, 20]
@@ -37,45 +41,62 @@ def generate():
         
         distances, indices = model.kneighbors([[s, e, w]])
         archetype_id = ARCHETYPES[indices[0][0]]
-        
         print(f"Matched: {archetype_id.upper()}")
 
+        # --- AI GENERATION ---
         try:
-            gemini = genai.GenerativeModel('gemini-pro')
+            # ✅ FIX: Updated to your available model
+            model_name = 'gemini-2.5-flash' 
+            gemini = genai.GenerativeModel(model_name)
+            
             prompt = f"""
-            Generate a JSON portfolio for a designer with the '{archetype_id}' aesthetic.
+            You are a design engine. Generate a JSON portfolio for a designer with the '{archetype_id}' aesthetic.
             Traits: Structure {s}%, Energy {e}%, Warmth {w}%.
             
-            Generate unique 'stats' relevant to this specific personality (e.g., Cyber has 'Uptime', Botanical has 'Growth Rate').
+            1. Create a "User Manual" warning/fact about this personality.
+            2. Generate 2 short "Articles" or "Thought Logs".
             
-            Output valid JSON only:
+            Output strictly valid JSON (no markdown):
             {{
-                "tagline": "Short Header",
-                "bio": "Two sentence bio.",
-                "manual": "A 1-sentence 'User Manual' or generalized fact about this style.",
-                "stats": [
-                    {{"label": "Unique Stat 1", "value": 85}}, 
-                    {{"label": "Unique Stat 2", "value": 90}}, 
-                    {{"label": "Unique Stat 3", "value": 40}}
-                ],
+                "tagline": "Header",
+                "bio": "Bio",
+                "manual": "User Manual Text",
+                "stats": [{{"label": "Stat 1", "value": 80}}, {{"label": "Stat 2", "value": 40}}],
                 "projects": [
                     {{"title": "Project A", "desc": "Desc"}},
-                    {{"title": "Project B", "desc": "Desc"}},
-                    {{"title": "Project C", "desc": "Desc"}}
+                    {{"title": "Project B", "desc": "Desc"}}
+                ],
+                "articles": [
+                    {{"title": "Blog Post 1", "date": "Oct 12", "content": "Summary."}},
+                    {{"title": "Blog Post 2", "date": "Nov 08", "content": "Summary."}}
                 ]
             }}
             """
             response = gemini.generate_content(prompt)
-            clean_json = response.text.replace("```json", "").replace("```", "")
+            clean_json = response.text.replace("```json", "").replace("```", "").strip()
             content = json.loads(clean_json)
+            
         except Exception as err:
-            print(f"AI Error: {err}")
-            content = {
-                "tagline": "Offline Mode", "bio": "AI unavailable.",
-                "manual": "System requires manual reboot.",
-                "stats": [{"label": "Error", "value": 0}],
-                "projects": []
-            }
+            print(f"AI Error ({model_name}): {err}")
+            
+            # FALLBACK: Try Gemini 2.0 Flash if 2.5 fails
+            try:
+                print("Attempting fallback to gemini-2.0-flash-exp...")
+                gemini = genai.GenerativeModel('gemini-2.0-flash-exp')
+                response = gemini.generate_content(prompt)
+                clean_json = response.text.replace("```json", "").replace("```", "").strip()
+                content = json.loads(clean_json)
+            except Exception as e2:
+                print(f"Fallback Error: {e2}")
+                # FINAL FALLBACK (Offline Data)
+                content = {
+                    "tagline": "Offline Mode", 
+                    "bio": "AI connection failed. Check API Key.",
+                    "manual": "System Offline.",
+                    "stats": [{"label": "Error", "value": 0}],
+                    "projects": [],
+                    "articles": []
+                }
 
         return jsonify({"archetype": archetype_id, "content": content})
 
