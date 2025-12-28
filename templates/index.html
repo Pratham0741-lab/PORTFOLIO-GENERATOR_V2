@@ -3,54 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Portfolio Architect v2</title>
+    <title>AI Portfolio Architect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #0f0f12; color: white; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .glass-panel { background: rgba(255,255,255,0.05); padding: 3rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 600px; backdrop-filter: blur(10px); }
-        h1 { font-weight: 300; letter-spacing: -1px; margin-bottom: 2rem; text-align: center; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: linear-gradient(45deg, #FF3CAC 0%, #784BA0 50%, #2B86C5 100%); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 1rem;}
-        button:hover { transform: scale(1.02); }
-        .grid-select { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        body { 
+            background: #0f0f12; color: white; font-family: 'Inter', sans-serif; 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; 
+        }
+        .glass-panel { 
+            background: rgba(255,255,255,0.05); padding: 3rem; border-radius: 20px; 
+            border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 600px; 
+            backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        h1 { font-weight: 300; letter-spacing: -1px; margin-bottom: 0.5rem; text-align: center; }
+        p { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
+        
+        .upload-zone {
+            border: 2px dashed #333; border-radius: 12px; padding: 2rem;
+            text-align: center; cursor: pointer; transition: 0.3s;
+            margin-bottom: 2rem; background: rgba(0,0,0,0.2);
+            position: relative; overflow: hidden;
+        }
+        .upload-zone:hover { border-color: #784BA0; background: rgba(120, 75, 160, 0.1); }
+        .upload-zone i { font-size: 2rem; color: #784BA0; margin-bottom: 10px; display: block;}
+        .upload-spinner { 
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.85); flex-direction: column;
+            justify-content: center; align-items: center; z-index: 10;
+        }
+        .spin-icon { animation: spin 1s linear infinite; font-size: 2rem; color: #00ff9d; margin-bottom: 10px;}
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        input[type="text"] { 
+            width: 100%; padding: 12px; margin-bottom: 15px; 
+            background: rgba(0,0,0,0.3); border: 1px solid #333; color: white; 
+            border-radius: 8px; box-sizing: border-box; transition: 0.3s;
+        }
+        input:focus { border-color: #784BA0; outline: none; }
+        
+        button { 
+            width: 100%; padding: 15px; 
+            background: linear-gradient(45deg, #FF3CAC 0%, #784BA0 50%, #2B86C5 100%); 
+            border: none; color: white; font-weight: bold; border-radius: 8px; 
+            cursor: pointer; transition: 0.3s; margin-top: 1rem;
+        }
+        button:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(120, 75, 160, 0.5); }
+        
+        .grid-select { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 5px; }
         label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #888; display: block; margin-bottom: 5px; }
-        .theme-opt { padding: 15px; background: #1a1a1a; border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .theme-opt { padding: 12px; background: #1a1a1a; border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; font-size: 0.9rem; }
         input[type="radio"] { display: none; }
-        input[type="radio"]:checked + .theme-opt { border-color: #784BA0; background: #222; }
+        input[type="radio"]:checked + .theme-opt { border-color: #784BA0; background: #222; box-shadow: 0 0 10px rgba(120, 75, 160, 0.3); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="glass-panel">
-        <h1>Portfolio <span style="color: #784BA0">Architect</span> AI</h1>
+        <h1>Portfolio <span style="color: #784BA0">AI</span> Architect</h1>
+        <p>Upload a resume to auto-generate EVERYTHING.</p>
+        
+        <div class="upload-zone" onclick="document.getElementById('resumeInput').click()">
+            <input type="file" id="resumeInput" hidden accept=".pdf" onchange="analyzeResume()">
+            <i class="fas fa-file-pdf"></i>
+            <span id="uploadText">Click to Upload Resume (PDF)</span>
+            
+            <div class="upload-spinner" id="spinner">
+                <i class="fas fa-circle-notch spin-icon"></i>
+                <span style="color: #00ff9d">AI is reading your projects...</span>
+            </div>
+        </div>
+
         <form action="/generate" method="POST">
+            <input type="hidden" name="extracted_data" id="extractedData">
+
             <div style="display: flex; gap: 10px;">
                 <div style="flex:1">
                     <label>Full Name</label>
-                    <input type="text" name="name" required placeholder="e.g. Sarah Connor">
+                    <input type="text" name="name" id="nameField" required placeholder="e.g. Sarah Connor">
                 </div>
                 <div style="flex:1">
                     <label>Role</label>
-                    <input type="text" name="role" required placeholder="e.g. Cyber Security">
+                    <input type="text" name="role" id="roleField" required placeholder="e.g. Cyber Security">
                 </div>
             </div>
 
             <label>Skills & Tech Stack</label>
-            <input type="text" name="skills" required placeholder="e.g. Python, Ethical Hacking, Linux">
+            <input type="text" name="skills" id="skillsField" required placeholder="e.g. Python, Ethical Hacking">
 
             <label>Select Aesthetic Engine</label>
             <div class="grid-select">
                 {% for key, val in themes.items() %}
                 <label>
-                    <input type="radio" name="theme" value="{{ key }}" required>
+                    <input type="radio" name="theme" value="{{ key }}" {% if key == 'minimalist' %}checked{% endif %}>
                     <div class="theme-opt">
-                        <strong>{{ val.name }}</strong><br>
-                        <small style="opacity: 0.6">{{ val.layout_type | title }} Layout</small>
+                        <strong>{{ val.name }}</strong>
                     </div>
                 </label>
                 {% endfor %}
             </div>
 
-            <button type="submit">Initialize Generation</button>
+            <button type="submit">Initialize Generation <i class="fas fa-magic"></i></button>
         </form>
     </div>
+
+    <script>
+        async function analyzeResume() {
+            const input = document.getElementById('resumeInput');
+            const file = input.files[0];
+            if (!file) return;
+
+            document.getElementById('spinner').style.display = 'flex';
+            document.getElementById('uploadText').innerText = "Analyzing " + file.name + "...";
+
+            const formData = new FormData();
+            formData.append('resume', file);
+
+            try {
+                const response = await fetch('/analyze_resume', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    document.getElementById('uploadText').innerText = "Upload Failed. Try again.";
+                } else {
+                    // 1. Fill visual fields so user knows it worked
+                    document.getElementById('nameField').value = data.name || "";
+                    document.getElementById('roleField').value = data.role || "";
+                    
+                    // Handle list or string for skills
+                    let skillsVal = data.skills || data.hard_skills || "";
+                    if (Array.isArray(skillsVal)) skillsVal = skillsVal.join(", ");
+                    document.getElementById('skillsField').value = skillsVal;
+
+                    // 2. IMPORTANT: Store the WHOLE JSON in the hidden field
+                    // This includes the projects and images the AI just found!
+                    document.getElementById('extractedData').value = JSON.stringify(data);
+
+                    document.getElementById('uploadText').innerHTML = `✅ <b>Success!</b> Found ${data.projects ? data.projects.length : 0} Projects.`;
+                    document.querySelector('.upload-zone').style.borderColor = '#00ff9d';
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to connect to server.");
+            } finally {
+                document.getElementById('spinner').style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
