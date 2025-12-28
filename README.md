@@ -4,3 +4,9 @@ now in the .env file <<GENAI_API_KEY="PASTE YOUR GEMINI API KEY">> paste this li
 now open app.py file and in terminal type --> python app.py
 then you will get a local host link like http://127.0.0.1:5000
 open it and use the AI PORTFOLIO GENERATOR
+
+
+
+
+
+A contextual disclaimer for the Project the portfolio generator accepts the resume only in pdf format and for image generation it requires a minute or so
