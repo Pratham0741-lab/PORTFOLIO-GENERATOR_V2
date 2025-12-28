@@ -9,4 +9,9 @@ open it and use the AI PORTFOLIO GENERATOR
 
 
 
+Before using it download all libraries that are in the requirements.txt using pip install -r requirements.txt
+
+
+
+
 A contextual disclaimer for the Project the portfolio generator accepts the resume only in pdf format and for image generation it requires a minute or so
